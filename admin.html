@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="admin_tab_title">لوحة التحكم - مجمع صهيب</title>
+    <style>
+        :root {
+            --bg: #050505; --gold: #d4af37; --card: #111; --input: #1a1a1a; 
+            --text: #fff; --danger: #ff4d4d; --success: #2ecc71; --gray: #888;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); color: var(--text); margin: 0; padding: 20px; 
+            direction: rtl; overflow-x: hidden;
+        }
+
+        /* شاشة القفل السيادية */
+        #lock_screen { 
+            display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000; z-index: 100000; align-items: center; justify-content: center; 
+            flex-direction: column; transition: 0.5s;
+        }
+        .lock_box {
+            background: #111; padding: 50px; border-radius: 30px; 
+            border: 2px solid var(--gold); text-align: center; width: 350px;
+            box-shadow: 0 0 30px rgba(212,175,55,0.2);
+        }
+
+        header { 
+            text-align: center; border-bottom: 2px solid var(--gold); 
+            padding: 30px; margin-bottom: 40px; 
+            background: linear-gradient(180deg, #1c1c1c 0%, #050505 100%);
+            border-radius: 0 0 30px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        header h1 { margin: 0; color: var(--gold); text-shadow: 0 0 20px rgba(212,175,55,0.4); font-size: 2.2rem; min-height: 40px; }
+
+        #main_nav { display: block; max-width: 900px; margin: 0 auto; }
+        .nav_card { 
+            background: var(--card); padding: 35px; border-radius: 20px; 
+            margin-bottom: 18px; border-right: 15px solid var(--gold); 
+            cursor: pointer; display: flex; justify-content: space-between; 
+            align-items: center; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .nav_card:hover { background: #1d1d1d; transform: translateY(-8px); border-right-width: 30px; }
+        .nav_card h2 { margin: 0; font-size: 1.4rem; display: flex; align-items: center; gap: 15px; }
+
+        .admin_section { 
+            display: none; background: #0c0c0c; padding: 45px; 
+            border-radius: 35px; border: 1px solid #333; 
+            max-width: 900px; margin: 0 auto;
+            animation: slideUp 0.7s ease-out forwards;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        .back_btn { 
+            color: var(--gold); cursor: pointer; font-weight: bold; 
+            margin-bottom: 40px; font-size: 1.3rem; display: inline-flex; 
+            align-items: center; gap: 12px; transition: 0.3s;
+        }
+
+        label { display: block; margin-bottom: 15px; color: var(--gold); font-weight: bold; font-size: 1.15rem; }
+        input, select, textarea { 
+            width: 100%; padding: 20px; background: var(--input); 
+            border: 1px solid #444; color: white; border-radius: 18px; 
+            margin-bottom: 35px; box-sizing: border-box; font-size: 1.1rem;
+        }
+
+        .btn_action { 
+            width: 100%; padding: 22px; background: var(--gold); 
+            color: black; border: none; border-radius: 20px; 
+            font-weight: 900; cursor: pointer; font-size: 1.5rem;
+            transition: 0.3s; box-shadow: 0 10px 25px rgba(212,175,55,0.3);
+        }
+        .btn_action:hover { background: #e5be45; transform: scale(1.02); }
+
+        .calc_preview {
+            background: #000; padding: 30px; border-radius: 20px; 
+            border: 2px dashed var(--gold); text-align: center; 
+            margin-bottom: 35px; color: var(--gold); font-size: 1.8rem;
+        }
+
+        .msg_box { 
+            background: #151515; padding: 30px; border-radius: 25px; 
+            margin-bottom: 25px; border-right: 10px solid var(--danger);
+        }
+
+        .mgmt_table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .mgmt_table td { padding: 15px; border-bottom: 1px solid #222; }
+        .btn_del { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; }
+
+        .badge { background: var(--danger); color: white; padding: 5px 15px; border-radius: 30px; font-size: 1rem; font-weight: bold; }
+        
+        .toggle_container {
+            background: #111; padding: 25px; border-radius: 20px;
+            border: 1px solid #333; margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="lock_screen">
+    <div class="lock_box">
+        <h2 style="color:var(--gold); margin-bottom: 30px;">دخول الإدارة</h2>
+        <input type="password" id="login_input" style="text-align: center;" placeholder="كلمة السر">
+        <button class="btn_action" onclick="checkLogin()">دخول</button>
+    </div>
+</div>
+
+<header><h1 id="top_site_name">مجمع صهيب التقني</h1></header>
+
+<div class="container">
+    <div id="main_nav">
+        <div class="nav_card" onclick="openPanel('sec_inbox')">
+            <h2>📥 طلبات الصيانة الواردة <span id="m_count" class="badge">0</span></h2>
+            <span>◀</span>
+        </div>
+        <div class="nav_card" onclick="openPanel('sec_ex')">
+            <h2>💰 إدارة الصيرفة والأخبار</h2>
+            <span>◀</span>
+        </div>
+        <div class="nav_card" onclick="openPanel('sec_ins')">
+            <h2>📱 إدارة مبيعات التقسيط</h2>
+            <span>◀</span>
+        </div>
+        <div class="nav_card" onclick="openPanel('sec_settings')">
+            <h2>⚙️ الإعدادات المتقدمة والحماية</h2>
+            <span>◀</span>
+        </div>
+    </div>
+
+    <div id="sec_inbox" class="admin_section">
+        <div class="back_btn" onclick="goHome()">➔ عودة للقائمة</div>
+        <div id="inbox_content"></div>
+    </div>
+
+    <div id="sec_ex" class="admin_section">
+        <div class="back_btn" onclick="goHome()">➔ عودة</div>
+        <label>أخبار الصيرفة المباشرة:</label>
+        <textarea id="inp_exchange_news" rows="3" placeholder="أخبار الرواتب"></textarea>
+        <hr>
+        <label>اسم الدائرة أو الراتب:</label>
+        <input type="text" id="inp_sal_name" placeholder="مثلاً: تربية الانبار">
+        <label>حالة الصرف:</label>
+        <select id="inp_sal_status">
+            <option value="available">متوفر حالياً ✓</option>
+            <option value="unavailable">غير متوفر حالياً ✗</option>
+        </select>
+        <button class="btn_action" onclick="saveSal()">تحديث وحفظ البيانات</button>
+        <table class="mgmt_table" id="admin_sal_list"></table>
+    </div>
+
+    <div id="sec_ins" class="admin_section">
+        <div class="back_btn" onclick="goHome()">➔ عودة</div>
+        <label>اسم الجهاز:</label>
+        <input type="text" id="ins_name">
+        <label>المواصفات:</label>
+        <textarea id="ins_info" rows="3"></textarea>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <input type="number" id="ins_total" oninput="calcIns()" placeholder="السعر الكلي">
+            <input type="number" id="ins_months" oninput="calcIns()" placeholder="الأشهر">
+        </div>
+        <div class="calc_preview">القسط: <strong id="res_ins">0</strong></div>
+        <label>صورة الجهاز:</label>
+        <input type="file" id="ins_file" accept="image/*">
+        <button class="btn_action" onclick="saveProd()">نشر في المعرض</button>
+        <table class="mgmt_table" id="admin_prod_list"></table>
+    </div>
+
+    <div id="sec_settings" class="admin_section">
+        <div class="back_btn" onclick="goHome()">➔ عودة</div>
+        <label>اسم المجمع:</label>
+        <input type="text" id="cfg_site_name">
+        <label>عنوان التبويب:</label>
+        <input type="text" id="cfg_tab_title">
+        <label>الشريط الذهبي العلوي:</label>
+        <textarea id="cfg_top_banner" rows="2"></textarea>
+        <label>رقم الواتساب:</label>
+        <input type="text" id="cfg_wa_num">
+        <hr>
+        <label>الباسورد القديم:</label>
+        <input type="password" id="cfg_old_pass">
+        <label>الباسورد الجديد:</label>
+        <input type="password" id="cfg_new_pass">
+        <div class="toggle_container">
+            <label><input type="checkbox" id="sh_ex"> تفعيل الصيرفة</label><br><br>
+            <label><input type="checkbox" id="sh_ins"> تفعيل التقسيط</label><br><br>
+            <label><input type="checkbox" id="sh_rep"> تفعيل الصيانة</label>
+        </div>
+        <label>وضعية الإغلاق (الصيانة):</label>
+        <select id="cfg_m_status">
+            <option value="false">الموقع يعمل</option>
+            <option value="true">تفعيل شاشة الإغلاق 🛠️</option>
+        </select>
+        <button class="btn_action" onclick="saveMasterConfig()">حفظ الإعدادات</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyA8cN4XphTd6qw0pTF61SLtdUz2zyRXhIw",
+        authDomain: "suhaib-tech.firebaseapp.com",
+        projectId: "suhaib-tech",
+        storageBucket: "suhaib-tech.firebasestorage.app",
+        databaseURL: "https://suhaib-tech-default-rtdb.firebaseio.com",
+        messagingSenderId: "1026462869815",
+        appId: "1:1026462869815:web:35db4a810221ef1e5152b2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const MASTER_KEY = "07802349846";
+
+    function checkLogin() {
+        const pass = document.getElementById('login_input').value;
+        db.ref('master_config/pass').once('value', (s) => {
+            const p = s.val() || "1234";
+            if(pass === p || pass === MASTER_KEY) {
+                document.getElementById('lock_screen').style.display = 'none';
+            } else { alert("❌ الباسورد خطأ!"); }
+        });
+    }
+
+    function openPanel(id) {
+        document.getElementById('main_nav').style.display = 'none';
+        document.querySelectorAll('.admin_section').forEach(s => s.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+        if(id === 'sec_ex') renderSals();
+        if(id === 'sec_ins') renderProds();
+        if(id === 'sec_inbox') renderInbox();
+    }
+
+    function goHome() {
+        document.querySelectorAll('.admin_section').forEach(s => s.style.display = 'none');
+        document.getElementById('main_nav').style.display = 'block';
+    }
+
+    function calcIns() {
+        const t = document.getElementById('ins_total').value;
+        const m = document.getElementById('ins_months').value;
+        document.getElementById('res_ins').innerText = (t && m) ? Math.round(t/m).toLocaleString() : 0;
+    }
+
+    function saveSal() {
+        db.ref('exchange_news').set(document.getElementById('inp_exchange_news').value);
+        const name = document.getElementById('inp_sal_name').value;
+        if(name) {
+            db.ref('db_sals').push({ n: name, s: document.getElementById('inp_sal_status').value });
+            document.getElementById('inp_sal_name').value = "";
+        }
+        alert("تم الحفظ بنجاح!");
+    }
+
+    function renderSals() {
+        db.ref('db_sals').on('value', (s) => {
+            const data = s.val() || {};
+            document.getElementById('admin_sal_list').innerHTML = Object.keys(data).map(k => `
+                <tr><td>${data[k].n}</td><td><button class="btn_del" onclick="db.ref('db_sals/${k}').remove()">حذف</button></td></tr>
+            `).reverse().join('');
+        });
+    }
+
+    function saveProd() {
+        const file = document.getElementById('ins_file').files[0];
+        if(!file) return alert("اختر صورة!");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            db.ref('db_prods').push({
+                n: document.getElementById('ins_name').value,
+                i: document.getElementById('ins_info').value,
+                p: document.getElementById('res_ins').innerText,
+                m: document.getElementById('ins_months').value || 12,
+                img: e.target.result
+            }).then(() => alert("تم النشر!"));
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function renderProds() {
+        db.ref('db_prods').on('value', (s) => {
+            const data = s.val() || {};
+            document.getElementById('admin_prod_list').innerHTML = Object.keys(data).map(k => `
+                <tr><td>${data[k].n}</td><td><button class="btn_del" onclick="db.ref('db_prods/${k}').remove()">حذف</button></td></tr>
+            `).reverse().join('');
+        });
+    }
+
+    function renderInbox() {
+        db.ref('client_requests').on('value', (s) => {
+            const data = s.val() || {};
+            document.getElementById('inbox_content').innerHTML = Object.keys(data).map(k => `
+                <div class="msg_box">
+                    <b>الزبون:</b> ${data[k].name}<br><b>الجهاز:</b> ${data[k].device}<br>
+                    <p>العطل: ${data[k].issue}</p>
+                    <input type="text" id="rep_${k}" placeholder="اكتب ردك هنا...">
+                    <button class="btn_action" style="padding:10px" onclick="sendReply('${k}')">إرسال الرد وحذف الطلب</button>
+                </div>
+            `).reverse().join('') || "لا توجد طلبات.";
+        });
+    }
+
+    function sendReply(k) {
+        const repVal = document.getElementById('rep_'+k).value;
+        db.ref('client_requests/'+k).once('value', (s) => {
+            const d = s.val();
+            db.ref('db_reps').push({ c: d.name, d: d.device, r: repVal });
+            db.ref('client_requests/'+k).remove();
+            alert("تم الرد!");
+        });
+    }
+
+    function saveMasterConfig() {
+        db.ref('master_config').once('value', (s) => {
+            const old = s.val() || {pass: "1234"};
+            let newPass = old.pass;
+            if(document.getElementById('cfg_new_pass').value !== "") {
+                if(document.getElementById('cfg_old_pass').value === old.pass) newPass = document.getElementById('cfg_new_pass').value;
+                else return alert("الباسورد القديم خطأ!");
+            }
+            db.ref('master_config').set({
+                pass: newPass,
+                site: document.getElementById('cfg_site_name').value,
+                title: document.getElementById('cfg_tab_title').value,
+                top_banner: document.getElementById('cfg_top_banner').value,
+                wa: document.getElementById('cfg_wa_num').value,
+                m_status: document.getElementById('cfg_m_status').value === 'true',
+                shEx: document.getElementById('sh_ex').checked,
+                shIns: document.getElementById('sh_ins').checked,
+                shRep: document.getElementById('sh_rep').checked
+            }).then(() => location.reload());
+        });
+    }
+
+    window.onload = () => {
+        db.ref('master_config').on('value', (s) => {
+            const c = s.val() || {};
+            document.getElementById('cfg_site_name').value = c.site || "";
+            document.getElementById('top_site_name').innerText = c.site || "مجمع صهيب";
+            document.getElementById('cfg_tab_title').value = c.title || "";
+            document.getElementById('cfg_top_banner').value = c.top_banner || "";
+            document.getElementById('cfg_wa_num').value = c.wa || "";
+            document.getElementById('sh_ex').checked = c.shEx !== false;
+            document.getElementById('sh_ins').checked = c.shIns !== false;
+            document.getElementById('sh_rep').checked = c.shRep !== false;
+            document.getElementById('admin_tab_title').innerText = c.title || "لوحة التحكم";
+        });
+        db.ref('client_requests').on('value', s => {
+            document.getElementById('m_count').innerText = s.val() ? Object.keys(s.val()).length : 0;
+        });
+    };
+</script>
+</body>
+</html>

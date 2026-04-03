@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="site_tab_title">مجمع صهيب التقني</title>
+    <style>
+        :root { --bg: #050505; --gold: #d4af37; --card: #111; --text: #fff; --border: #222; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; direction: rtl; overflow-x: hidden; }
+
+        /* شاشة الصيانة */
+        #maint_screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 20px; }
+
+        header { background: linear-gradient(180deg, #1c1c1c 0%, #050505 100%); padding: 25px; text-align: center; border-bottom: 2px solid var(--gold); }
+        header h1 { margin: 0; color: var(--gold); font-size: 1.8rem; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
+
+        #top_gold_banner { background: var(--gold); color: #000; padding: 12px; text-align: center; font-weight: bold; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 15px; }
+
+        .nav_unit { 
+            background: var(--card); padding: 25px; border-radius: 15px; 
+            margin-bottom: 15px; border-right: 10px solid var(--gold); 
+            cursor: pointer; display: flex; justify-content: space-between; 
+            align-items: center; transition: 0.3s; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        .nav_unit:hover { background: #1a1a1a; transform: translateX(-5px); }
+        .nav_unit h2 { margin: 0; font-size: 1.4rem; }
+
+        .section { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .back_btn { color: var(--gold); cursor: pointer; margin-bottom: 20px; display: inline-block; font-weight: bold; }
+
+        .products_grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .product_card { background: var(--card); border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid var(--border); transition: 0.3s; text-align: center; }
+        .product_card:hover { border-color: var(--gold); transform: translateY(-5px); }
+        .product_card img { width: 100%; height: 160px; object-fit: cover; }
+        .product_card h3 { font-size: 1rem; margin: 12px 5px; color: #fff; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; align-items: center; justify-content: center; }
+        .modal_content { background: #111; width: 90%; max-width: 450px; border-radius: 20px; border: 1px solid var(--gold); padding: 25px; position: relative; text-align: center; }
+        .close_modal { position: absolute; top: 15px; left: 15px; color: var(--gold); font-size: 2rem; cursor: pointer; }
+        
+        .modal_img { width: 100%; border-radius: 15px; margin-bottom: 15px; height: 200px; object-fit: cover; border: 1px solid #333; }
+        
+        .plan_table { width: 100%; margin: 20px 0; border-collapse: collapse; background: #000; border-radius: 10px; overflow: hidden; }
+        .plan_table td { padding: 12px; border: 1px solid #222; text-align: right; }
+        .plan_table b { color: var(--gold); font-size: 1.1rem; }
+        .plan_label { color: #888; font-size: 0.9rem; width: 45%; }
+
+        .btn_gold { background: var(--gold); color: #000; border: none; padding: 18px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; font-size: 1.2rem; }
+
+        .exchange_box { background: rgba(212,175,55,0.1); padding: 20px; border-radius: 12px; border: 1px solid var(--gold); margin-bottom: 25px; display: none; font-weight: bold; color: var(--gold); }
+        .sal_item { background: #111; padding: 18px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; border: 1px solid var(--border); }
+        
+        .wa_float { position: fixed; bottom: 25px; left: 25px; background: #25d366; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 30px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+<div id="maint_screen"><h1 style="color:var(--gold)">🛠️</h1><h2 id="maint_msg_display" style="color:var(--gold)"></h2></div>
+
+<header><h1 id="display_site_name">مجمع صهيب التقني</h1></header>
+<div id="top_gold_banner"></div>
+
+<div class="container">
+    <div id="main_menu">
+        <div id="unit_ex" class="nav_unit" onclick="openSection('s_ex')"><h2>💰 قسم الصيرفة والرواتب</h2><span>◀</span></div>
+        <div id="unit_ins" class="nav_unit" onclick="openSection('s_ins')"><h2>📱 معرض التقسيط</h2><span>◀</span></div>
+        <div id="unit_rep" class="nav_unit" onclick="openSection('s_rep')"><h2>🛠️ طلب صيانة</h2><span>◀</span></div>
+    </div>
+
+    <div id="s_ex" class="section">
+        <span class="back_btn" onclick="goBack()">➔ عودة للقائمة</span>
+        <div id="ex_news_display" class="exchange_box"></div>
+        <div id="salaries_list"></div>
+    </div>
+
+    <div id="s_ins" class="section">
+        <span class="back_btn" onclick="goBack()">➔ عودة للقائمة</span>
+        <div class="products_grid" id="products_grid"></div>
+    </div>
+
+    <div id="s_rep" class="section">
+        <span class="back_btn" onclick="goBack()">➔ عودة للقائمة</span>
+        <div style="background: #111; padding: 25px; border-radius: 15px; border: 1px solid #222;">
+            <input type="text" id="c_name" placeholder="اسمك الكامل" style="width:100%; padding:12px; margin-bottom:15px; background:#1a1a1a; border:1px solid #333; color:white; border-radius:8px;">
+            <input type="text" id="c_device" placeholder="نوع الجهاز" style="width:100%; padding:12px; margin-bottom:15px; background:#1a1a1a; border:1px solid #333; color:white; border-radius:8px;">
+            <textarea id="c_issue" placeholder="ما هي مشكلة الجهاز؟" style="width:100%; padding:12px; height:80px; background:#1a1a1a; border:1px solid #333; color:white; border-radius:8px;"></textarea>
+            <button class="btn_gold" onclick="submitRequest()">إرسال الطلب</button>
+        </div>
+        <div id="replies_list" style="margin-top:20px;"></div>
+    </div>
+</div>
+
+<div id="prod_modal" class="modal">
+    <div class="modal_content">
+        <span class="close_modal" onclick="closeModal()">&times;</span>
+        <img id="m_img" class="modal_img">
+        <h2 id="m_title" style="color:var(--gold); margin-bottom: 5px;"></h2>
+        <p id="m_info" style="color:#aaa; font-size:0.9rem; margin-bottom: 15px;"></p>
+        <table class="plan_table">
+            <tr><td class="plan_label">مدة التقسيط:</td><td><b id="m_months">0</b> <small>شهر</small></td></tr>
+            <tr><td class="plan_label">القسط الشهري:</td><td><b id="m_price">0</b> <small>د.ع</small></td></tr>
+        </table>
+        <button class="btn_gold" id="m_wa_btn">اطلب الآن عبر واتساب 💬</button>
+    </div>
+</div>
+
+<a id="wa_link" href="#" class="wa_float" target="_blank">💬</a>
+
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyA8cN4XphTd6qw0pTF61SLtdUz2zyRXhIw",
+        authDomain: "suhaib-tech.firebaseapp.com",
+        projectId: "suhaib-tech",
+        storageBucket: "suhaib-tech.firebasestorage.app",
+        databaseURL: "https://suhaib-tech-default-rtdb.firebaseio.com",
+        messagingSenderId: "1026462869815",
+        appId: "1:1026462869815:web:35db4a810221ef1e5152b2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function openSection(id) {
+        document.getElementById('main_menu').style.display = 'none';
+        document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+    }
+
+    function goBack() {
+        document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+        document.getElementById('main_menu').style.display = 'block';
+    }
+
+    function loadData() {
+        // الإعدادات العامة
+        db.ref('master_config').on('value', (s) => {
+            const cfg = s.val() || {};
+            if(cfg.m_status === true) { 
+                document.getElementById('maint_screen').style.display = 'flex'; 
+                document.getElementById('maint_msg_display').innerText = cfg.m_msg || "الموقع في صيانة حالياً"; 
+            } else { document.getElementById('maint_screen').style.display = 'none'; }
+            
+            if(cfg.site) document.getElementById('display_site_name').innerText = cfg.site;
+            if(cfg.title) { document.title = cfg.title; document.getElementById('site_tab_title').innerText = cfg.title; }
+            if(cfg.top_banner) { 
+                document.getElementById('top_gold_banner').innerText = cfg.top_banner; 
+                document.getElementById('top_gold_banner').style.display = 'block'; 
+            } else { document.getElementById('top_gold_banner').style.display = 'none'; }
+
+            document.getElementById('unit_ex').style.display = (cfg.shEx !== false) ? 'flex' : 'none';
+            document.getElementById('unit_ins').style.display = (cfg.shIns !== false) ? 'flex' : 'none';
+            document.getElementById('unit_rep').style.display = (cfg.shRep !== false) ? 'flex' : 'none';
+            if(cfg.wa) document.getElementById('wa_link').href = "https://wa.me/" + cfg.wa;
+        });
+
+        // أخبار الصيرفة
+        db.ref('exchange_news').on('value', s => {
+            const news = s.val();
+            if(news) { document.getElementById('ex_news_display').innerText = "📢 " + news; document.getElementById('ex_news_display').style.display = 'block'; }
+            else { document.getElementById('ex_news_display').style.display = 'none'; }
+        });
+
+        // الرواتب
+        db.ref('db_sals').on('value', s => {
+            const data = s.val() || {};
+            document.getElementById('salaries_list').innerHTML = Object.keys(data).map(k => `
+                <div class="sal_item"><span>${data[k].n}</span><b style="color:${data[k].s==='available'?'#2ecc71':'#ff4d4d'}">${data[k].s==='available'?'متوفر ✓':'غير متوفر ✗'}</b></div>
+            `).reverse().join('');
+        });
+
+        // الأجهزة
+        db.ref('db_prods').on('value', s => {
+            const data = s.val() || {};
+            document.getElementById('products_grid').innerHTML = Object.keys(data).map(k => `
+                <div class="product_card" onclick="openModal('${k}')"><img src="${data[k].img}"><h3>${data[k].n}</h3></div>
+            `).reverse().join('') || "<p style='text-align:center; width:100%; color:#666;'>المعرض فارغ حالياً.</p>";
+        });
+
+        // الردود
+        db.ref('db_reps').on('value', s => {
+            const data = s.val() || {};
+            document.getElementById('replies_list').innerHTML = Object.keys(data).map(k => `
+                <div style="background:#111; padding:15px; border-radius:10px; margin-bottom:10px; border-right:4px solid var(--gold);">
+                    <b>الزبون ${data[k].c}:</b> جهازه (${data[k].d})<br><span style="color:var(--gold)">الرد: ${data[k].r}</span>
+                </div>
+            `).reverse().join('');
+        });
+    }
+
+    function openModal(key) {
+        db.ref('db_prods/' + key).once('value', s => {
+            const p = s.val();
+            document.getElementById('m_img').src = p.img;
+            document.getElementById('m_title').innerText = p.n;
+            document.getElementById('m_info').innerText = p.i;
+            document.getElementById('m_price').innerText = p.p;
+            document.getElementById('m_months').innerText = p.m || 12;
+            
+            document.getElementById('m_wa_btn').onclick = () => {
+                db.ref('master_config/wa').once('value', sn => {
+                    const msg = `مرحباً صهيب، أود الاستفسار عن جهاز: ${p.n}`;
+                    window.open(`https://wa.me/${sn.val()}?text=${encodeURIComponent(msg)}`, '_blank');
+                });
+            };
+            document.getElementById('prod_modal').style.display = 'flex';
+        });
+    }
+
+    function closeModal() { document.getElementById('prod_modal').style.display = 'none'; }
+
+    function submitRequest() {
+        const n = document.getElementById('c_name').value, d = document.getElementById('c_device').value, i = document.getElementById('c_issue').value;
+        if(n && d) {
+            db.ref('client_requests').push({ name: n, device: d, issue: i });
+            alert("تم إرسال طلبك بنجاح!");
+            document.getElementById('c_name').value = ""; document.getElementById('c_device').value = ""; document.getElementById('c_issue').value = "";
+        } else { alert("يرجى كتابة الاسم ونوع الجهاز"); }
+    }
+
+    window.onload = loadData;
+</script>
+</body>
+</html>
